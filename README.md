@@ -5,6 +5,8 @@
 
 > lesson 3 - done✔
 
+> lesson 4 - 
+
 ##
 доповнення до README через ПК
 
