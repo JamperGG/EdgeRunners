@@ -1,9 +1,9 @@
 # Тк-41 Об’єктно-орієнтоване програмування
-> lesson 1 - done✔
+> LAB 1 - done✔
 
-> lesson 2 - done✔
+> LAB 2 - done✔
 
-> lesson 3 - done✔
+> LAB 3 - in process ※
 
 > lesson 4 - 
 
