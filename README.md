@@ -3,9 +3,8 @@
 
 > LAB 2 - done✔
 
-> LAB 3 - in process ※
+> LAB 3 - done✔
 
-> lesson 4 - 
 
 ##
 доповнення до README через ПК
