@@ -1,0 +1,444 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Смішний сайт з квітами</title>
+    <style>
+        /* Плавний градієнт із рожевого, бірюзового та фіолетового */
+        body {
+            margin: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background: linear-gradient(270deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb, #84fab0, #8fd3f4);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+            transition: background 2s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        @keyframes gradientBG {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Поле для квіточок */
+        #flower-field {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* не заважає клікам */
+            z-index: 0;
+        }
+
+        /* Анімація падіння з різною швидкістю та інтервалами */
+        @keyframes floatFlower {
+            0% {
+                top: -10%;
+                transform: rotate(0deg);
+                opacity: 0;
+                visibility: hidden;
+            }
+            5% {
+                opacity: 1;
+                visibility: visible;
+            }
+            100% {
+                top: 110%;
+                transform: rotate(360deg);
+                opacity: 1;
+                visibility: visible;
+            }
+        }
+        .flower {
+            position: absolute;
+            font-size: 2.5rem;
+            animation-fill-mode: backwards;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Кнопка */
+        .delete-button {
+            position: absolute;
+            bottom: 30px;
+            font-size: 24px;
+            padding: 20px 40px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: background 0.2s;
+            z-index: 10; /* вище за квіти */
+        }
+        /* Видаляємо зміщення при наведенні */
+        .delete-button:hover {
+            /* transform: none; можна залишити порожнім, щоб нічого не змінювалось */
+        }
+        .delete-button::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 3s linear;
+            z-index: 1;
+        }
+        .delete-button.active::after {
+            transform: scaleX(1);
+        }
+
+        /* Темний режим */
+        .dark-mode {
+            background: black !important;
+            animation: none !important; /* вимикає переливання */
+        }
+
+        /* Контейнер завантаження */
+        .loading-container {
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            font-size: 1.5rem;
+            text-shadow: 2px 2px 4px black;
+            z-index: 20; 
+        }
+        .progress-bar {
+            width: 300px;
+            height: 30px;
+            background: #444;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .progress {
+            width: 0;
+            height: 100%;
+            background: red;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.1s linear; 
+            text-shadow: 2px 2px 4px black;
+        }
+
+        /* Повідомлення про помилку (з великими черепками) */
+        .error-message {
+            display: none;
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px red;
+            z-index: 9999;
+        }
+        .error-message.show {
+            display: block;
+        }
+        .error-message::before,
+        .error-message::after {
+            content: "☠️";
+            font-size: 5rem; /* робимо черепки досить великими */
+            margin: 0 20px;
+        }
+        @keyframes errorFlashing {
+            0%, 100% { color: white; }
+            50%      { color: red;   }
+        }
+        .error-message.flashing {
+            animation: errorFlashing 0.6s infinite;
+        }
+
+        /* Фінальне повідомлення */
+        .final-message {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem; 
+            text-align: center;
+            max-width: 80%;
+            background: linear-gradient(90deg, #ffe400, #ff00e7, #00e7ff, #37ff00);
+            background-size: 400% 400%;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        .final-message.show {
+            display: block;
+            animation: fadeIn 2s forwards, textGradient 6s ease infinite;
+        }
+        @keyframes fadeIn {
+            0%   { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes textGradient {
+            0%   { background-position: 0%  50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0%  50%; }
+        }
+
+        /* Куточні зображення */
+        .corner-images {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50; 
+            display: none; /* Приховано за замовчуванням */
+        }
+        .corner-images.show {
+            display: block; /* Показується, коли треба */
+        }
+        .corner-img {
+            position: absolute;
+            width: 120px;   /* приклад розміру */
+            height: auto;
+            opacity: 0; 
+        }
+        .top-left-image {
+            top: 0;
+            left: 0;
+            animation: slideInTopLeft 2s ease forwards;
+        }
+        @keyframes slideInTopLeft {
+            0% {
+                transform: translate(-150%, -150%);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(30%, 30%);
+                opacity: 1;
+            }
+        }
+        /* Якщо треба інші кути - залишимо попередні анімації */
+
+        /* Секретна кнопка і контейнер */
+        .secret-button {
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #ff66cc;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.2s;
+            z-index: 999;
+        }
+        .secret-button:hover {
+            /* без змін, щоб не було зміщення */
+        }
+        .secret-message-container {
+            display: none;
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            color: #fff;
+            text-shadow: 2px 2px 4px black;
+            max-width: 90%;
+            text-align: center;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Поле з літаючими квіточками -->
+    <div id="flower-field">
+        <div class="flower" style="left:10%; animation: floatFlower 9s linear infinite;  animation-delay: 0s;">🌸</div>
+        <div class="flower" style="left:30%; animation: floatFlower 12s linear infinite; animation-delay: 2s;">🌼</div>
+        <div class="flower" style="left:50%; animation: floatFlower 8s linear infinite;  animation-delay: 1s;">🌹</div>
+        <div class="flower" style="left:70%; animation: floatFlower 14s linear infinite; animation-delay: 4s;">🌺</div>
+        <div class="flower" style="left:85%; animation: floatFlower 11s linear infinite; animation-delay: 6s;">💮</div>
+        <div class="flower" style="left:15%; animation: floatFlower 10s linear infinite; animation-delay: 3s;">🌻</div>
+        <div class="flower" style="left:25%; animation: floatFlower 7s linear infinite;  animation-delay: 5s;">🌷</div>
+        <div class="flower" style="left:40%; animation: floatFlower 13s linear infinite; animation-delay: 1.5s;">💐</div>
+        <div class="flower" style="left:60%; animation: floatFlower 9s linear infinite;  animation-delay: 4.5s;">🌻</div>
+        <div class="flower" style="left:90%; animation: floatFlower 15s linear infinite; animation-delay: 2.5s;">🌼</div>
+    </div>
+
+    <!-- Кнопка -->
+    <button class="delete-button" onclick="activateDarkMode()">ви увєрєни шо хатіте видалити😮😮😥😥😥?</button>
+
+    <!-- Контейнер завантаження -->
+    <div class="loading-container" id="loading-container">
+        <div>Любов видаляється😥🥀🥀</div>
+        <div class="progress-bar">
+            <div class="progress" id="progress">0%</div>
+        </div>
+    </div>
+
+    <!-- Повідомлення про помилку (із черепками) -->
+    <div class="error-message" id="error-message">АШИБКА</div>
+
+    <!-- Фінальне повідомлення -->
+    <div class="final-message" id="final-message">
+        💖💖💚Лавкі тебе сильно мая кахана я твій фанат💚❤💕
+    </div>
+
+    <!-- Контейнер для картинок у кутах -->
+    <div class="corner-images" id="corner-images">
+        <img class="corner-img top-left-image" src="image1.png" alt="Зображення вгорі зліва">
+    </div>
+
+    <!-- Секретна кнопка і контейнер для повідомлень -->
+    <button class="secret-button" id="secret-button" onclick="secretClick()">клікні тут сікретік</button>
+    <div class="secret-message-container" id="secret-message-container">
+        <span id="secret-message"></span>
+    </div>
+
+    <script>
+        function activateDarkMode() {
+            const button       = document.querySelector('.delete-button');
+            const flowerField  = document.getElementById('flower-field');
+            
+            // Ховаємо всі квіти на час темного режиму
+            flowerField.style.display = 'none';
+
+            // Ефект заливки кнопки
+            button.classList.add('active'); 
+            // Через 3 секунди робимо темний режим і запускаємо "завантаження"
+            setTimeout(() => {
+                document.body.classList.add('dark-mode');
+                startForwardLoading();
+            }, 3000);
+        }
+
+        // Завантаження від 0 до 99
+        function startForwardLoading() {
+            const loadingContainer = document.getElementById('loading-container');
+            const progressElem     = document.getElementById('progress');
+            loadingContainer.style.display = 'flex';
+
+            let progress = 0;
+            const forwardInterval = setInterval(() => {
+                progress += 1;
+                if (progress <= 99) {
+                    progressElem.style.width = progress + '%';
+                    progressElem.textContent = progress + '%';
+                }
+                if (progress >= 99) {
+                    clearInterval(forwardInterval);
+                    startReverseLoading();
+                }
+            }, 50);
+        }
+
+        // Завантаження в зворотньому напрямку
+        function startReverseLoading() {
+            const errorMsg         = document.getElementById('error-message');
+            const progressElem     = document.getElementById('progress');
+            const loadingContainer = document.getElementById('loading-container');
+            
+            // Показуємо "АШИБКА" і вмикаємо миготіння
+            errorMsg.classList.add('show', 'flashing');
+
+            let progress = 99;
+            const reverseInterval = setInterval(() => {
+                progress -= 1;
+                if (progress >= 0) {
+                    progressElem.style.width  = progress + '%';
+                    progressElem.textContent  = progress + '%';
+                }
+                if (progress <= 0) {
+                    clearInterval(reverseInterval);
+                    // Приховуємо прогрес
+                    loadingContainer.style.display = 'none';
+
+                    // Ховаємо "АШИБКА"
+                    errorMsg.classList.remove('flashing', 'show');
+
+                    // Показуємо фінальне повідомлення
+                    const finalMessage = document.getElementById('final-message');
+                    finalMessage.classList.add('show');
+
+                    // Повертаємо початковий гарний фон і ховаємо кнопку
+                    document.body.classList.remove('dark-mode');
+                    const button = document.querySelector('.delete-button');
+                    button.classList.remove('active'); 
+                    button.style.display = 'none'; 
+
+                    // Знову показуємо квіточки
+                    document.getElementById('flower-field').style.display = 'block';
+
+                    // Показуємо куточні зображення
+                    const cornerImages = document.getElementById('corner-images');
+                    cornerImages.classList.add('show');
+
+                    // Нарешті показуємо секретну кнопку
+                    document.getElementById('secret-button').style.display = 'block';
+                }
+            }, 50);
+        }
+
+        /***************************************************************
+         * Секретна кнопка, що циклічно показує різні повідомлення
+         ***************************************************************/
+        let secretIndex = 0;
+        /* Додаємо 10+ речень про те, як ви любите свою дівчину */
+        const secretMessages = [
+            "Ти моє сонечко я тебе дуже люблю❤❤❤",
+            "Ти мій піськінс маленький💗",
+            "Скучаю за тобою сильно😥😥",
+            "Надіюсь тобі панрвавівся сайт",
+            "В тебе дуже красиві оченята😍😍",
+            "Я вдячний шо ти в мене є💖💖",
+            "В тебе гарні пальчики😘😘😘",
+            "В тебе дуже красіва посмішка мені дуже падобається коли ти усміхаєшся",
+            "Ти мій раналду я твій мєссі🏈⚽⚽",
+            "Ти красивіша за адель😊😊😊",
+            "ти мій казума кірю люблю тібя",
+            "Дякую за брелок я тібя дуже люблю він мені дуже подобається😘😘😘💗💗",
+            "Я дуже люблю када ти мені фак показуєш сильно💕💕💕💕"
+        ];
+
+        function secretClick() {
+            const msgContainer = document.getElementById('secret-message-container');
+            const msgSpan      = document.getElementById('secret-message');
+
+            // Показуємо контейнер для секретних повідомлень
+            msgContainer.style.display = 'block';
+
+            // Встановлюємо поточне повідомлення
+            msgSpan.textContent = secretMessages[secretIndex];
+
+            // Індекс наступного повідомлення (по колу)
+            secretIndex = (secretIndex + 1) % secretMessages.length;
+        }
+    </script>
+</body>
+</html>
+</qodoArtifact>
