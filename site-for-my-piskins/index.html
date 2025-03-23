@@ -229,7 +229,6 @@
             -webkit-background-clip: text;
             background-clip: text;
         }
-
         .final-message.show {
             display: block;
             animation: fadeIn 2s forwards, textGradient 6s ease infinite;
@@ -244,6 +243,12 @@
             0%   { background-position: 0%  50%; }
             50%  { background-position: 100% 50%; }
             100% { background-position: 0%  50%; }
+        }
+
+        /* Додаємо клас .emoji, щоб емодзі залишались кольоровими */
+        .final-message .emoji {
+            -webkit-text-fill-color: #fff !important;
+            color: #fff !important;
         }
 
         /**************************************************************
@@ -288,7 +293,7 @@
         }
 
         /**************************************************************
-         * Секретна кнопка і контейнер
+         * Секретна кноп��а і контейнер
          **************************************************************/
         .secret-button {
             display: none;
@@ -347,8 +352,10 @@
 
     <div class="error-message" id="error-message">АШИБКА</div>
 
+    <!-- Оновлена фінальна секція з окремим .emoji -->
     <div class="final-message" id="final-message">
-        💖💖💚Нашу любов неможливо видалити😎😎 лавкі тебе сильно мая кахана я твій фанат💚❤💕
+        <span class="emoji">💖💖💚</span>Нашу любов неможливо видалити<span class="emoji">😎😎</span> лавкі тебе сильно мая кахана 
+        я твій фанат<span class="emoji">💚❤💕</span>
     </div>
 
     <div class="corner-images" id="corner-images">
@@ -356,7 +363,7 @@
     </div>
 
     <!-- Секретна кнопка і контейнер для повідомлень -->
-    <button class="secret-button" id="secret-button" onclick="secretClick()">клікні тут сікретік</button>
+    <button class="secret-button" id="secret-button" onclick="secretClick()">клікні тут сікретік 'декілька раз'</button>
     <div class="secret-message-container" id="secret-message-container">
         <span id="secret-message"></span>
     </div>
